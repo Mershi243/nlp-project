@@ -12,16 +12,17 @@ from textblob import TextBlob
 import speech_recognition as sr
 import os
 
-# Ensure NLTK resources are downloaded at runtime
-nltk.data.path.append("./nltk_data/")
+import nltk
 
-if not os.path.exists("./nltk_data"):
-    os.makedirs("./nltk_data")
+# Download necessary NLTK resources
+nltk.download("punkt")
+nltk.download("stopwords")
+nltk.download("wordnet")
+nltk.download("vader_lexicon")
 
-nltk.download("punkt", download_dir="./nltk_data")
-nltk.download("stopwords", download_dir="./nltk_data")
-nltk.download("wordnet", download_dir="./nltk_data")
-nltk.download("vader_lexicon", download_dir="./nltk_data")
+# Ensure punkt is properly loaded
+nltk.data.path.append("/usr/local/nltk_data")  # Add a custom path if necessary
+
 
 # Initialize NLP tools
 lemmatizer = WordNetLemmatizer()
