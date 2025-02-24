@@ -10,9 +10,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.sentiment import SentimentIntensityAnalyzer
 from textblob import TextBlob
 import speech_recognition as sr
-import os
-
-import nltk
+import io
 
 # Download necessary NLTK resources
 nltk.download("punkt")
@@ -20,87 +18,71 @@ nltk.download("stopwords")
 nltk.download("wordnet")
 nltk.download("vader_lexicon")
 
-# Ensure punkt is properly loaded
-nltk.data.path.append("/usr/local/nltk_data")  # Add a custom path if necessary
-
-
 # Initialize NLP tools
 lemmatizer = WordNetLemmatizer()
 sia = SentimentIntensityAnalyzer()
 stop_words = set(stopwords.words("english"))
 
-# Define text preprocessing function
+# Define the text preprocessing function
 def preprocess_text(text):
     tokens = word_tokenize(text)
-    filtered_tokens = [lemmatizer.lemmatize(word) for word in tokens if word.lower() not in stop_words]
+    filtered_tokens = [lemmatizer.lemmatize(word) for word in tokens if word.isalnum() and word.lower() not in stop_words]
     return " ".join(filtered_tokens)
 
 # Function to analyze sentiment
 def analyze_sentiment(text):
-    if not isinstance(text, str) or text.strip() == "":
-        return "", 0, "Neutral"
-    
     processed_text = preprocess_text(text)
     sentiment_score = sia.polarity_scores(processed_text)["compound"]
     sentiment_label = "Positive" if sentiment_score > 0 else "Negative" if sentiment_score < 0 else "Neutral"
     return processed_text, sentiment_score, sentiment_label
 
 # Streamlit App Title
-st.title("📊 NLP-Based Sentiment Analysis App")
+st.title("\ud83d\udcca NLP-Based Sentiment Analysis App")
 
-# 📂 File Upload Section
+# \ud83d\udcc2 File Upload Section
 st.header("Upload a CSV or TXT file for Sentiment Analysis")
 uploaded_file = st.file_uploader("Upload a CSV or TXT file", type=["csv", "txt"])
 
 if uploaded_file is not None:
-    try:
-        # Handling CSV Files
-        if uploaded_file.name.endswith(".csv"):
-            df = pd.read_csv(uploaded_file)
-        else:  # Handling TXT Files
-            content = uploaded_file.getvalue().decode("utf-8")
-            df = pd.DataFrame({"Text": content.splitlines()})
+    # Handling CSV Files
+    if uploaded_file.name.endswith(".csv"):
+        df = pd.read_csv(uploaded_file)
+    else:  # Handling TXT Files
+        content = uploaded_file.getvalue().decode("utf-8")
+        df = pd.DataFrame({"Text": content.splitlines()})
 
-        st.write("### Dataset Preview")
-        st.dataframe(df.head())
+    st.write("### Dataset Preview")
+    st.dataframe(df.head())
 
-        # Detect Text Column Dynamically
-        text_column = None
-        for col in df.columns:
-            if df[col].dtype == "object":
-                text_column = col
-                break
+    # Dynamically Detect Text Column
+    text_column = next((col for col in df.columns if df[col].dtype == "object"), None)
 
-        if text_column:
-            df["Processed_Text"], df["Sentiment_Score"], df["Sentiment_Label"] = zip(
-                *df[text_column].apply(analyze_sentiment)
-            )
+    if text_column:
+        df[["Processed_Text", "Sentiment_Score", "Sentiment_Label"]] = df[text_column].apply(analyze_sentiment).apply(pd.Series)
 
-            st.write("### Sentiment Analysis Results")
-            st.dataframe(df[[text_column, "Processed_Text", "Sentiment_Label"]])
+        st.write("### Sentiment Analysis Results")
+        st.dataframe(df[[text_column, "Processed_Text", "Sentiment_Label"]])
 
-            # 📊 Sentiment Distribution
-            st.write("### Sentiment Distribution")
-            fig, ax = plt.subplots()
-            df["Sentiment_Label"].value_counts().plot(kind="bar", ax=ax, color=["green", "red", "gray"])
-            st.pyplot(fig)
-        else:
-            st.warning("No valid text column found in the uploaded file!")
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+        # \ud83d\udcca Sentiment Distribution
+        st.write("### Sentiment Distribution")
+        fig, ax = plt.subplots()
+        df["Sentiment_Label"].value_counts().plot(kind="bar", ax=ax, color=["green", "red", "gray"])
+        st.pyplot(fig)
+    else:
+        st.warning("No valid text column found in the uploaded file!")
 
-# ✍️ **Real-time Text Sentiment Analysis**
-st.header("📝 Real-time Text Sentiment Analysis")
+# \u270d\ufe0f **Real-time Text Sentiment Analysis**
+st.header("\ud83d\udcdd Real-time Text Sentiment Analysis")
 user_text = st.text_area("Enter text for sentiment analysis:", key="text_input_area")
 
 if user_text:
     processed_text, sentiment_score, sentiment_label = analyze_sentiment(user_text)
-    st.write(f"**Processed Text:** {processed_text}")
-    st.write(f"**Sentiment Score:** {sentiment_score}")
-    st.write(f"**Sentiment Label:** {sentiment_label}")
+    st.write(f"Processed Text: {processed_text}")
+    st.write(f"Sentiment Score: {sentiment_score}")
+    st.write(f"Sentiment Label: {sentiment_label}")
 
-# 🎤 **Real-time Speech Sentiment Analysis**
-st.header("🎤 Real-time Speech Sentiment Analysis")
+# \ud83c\udfa4 **Real-time Speech Sentiment Analysis**
+st.header("\ud83c\udfa4 Real-time Speech Sentiment Analysis")
 
 if st.button("Start Recording"):
     recognizer = sr.Recognizer()
@@ -110,12 +92,12 @@ if st.button("Start Recording"):
 
         try:
             speech_text = recognizer.recognize_google(audio)
-            st.write(f"**Recognized Speech:** {speech_text}")
+            st.write(f"Recognized Speech: {speech_text}")
 
             processed_text, sentiment_score, sentiment_label = analyze_sentiment(speech_text)
-            st.write(f"**Processed Text:** {processed_text}")
-            st.write(f"**Sentiment Score:** {sentiment_score}")
-            st.write(f"**Sentiment Label:** {sentiment_label}")
+            st.write(f"Processed Text: {processed_text}")
+            st.write(f"Sentiment Score: {sentiment_score}")
+            st.write(f"Sentiment Label: {sentiment_label}")
 
         except sr.UnknownValueError:
             st.error("Google Speech Recognition could not understand the audio.")
