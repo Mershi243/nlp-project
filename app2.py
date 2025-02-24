@@ -37,9 +37,9 @@ def analyze_sentiment(text):
     return processed_text, sentiment_score, sentiment_label
 
 # Streamlit App Title
-st.title("\ud83d\udcca NLP-Based Sentiment Analysis App")
+st.title("\U0001F4CA NLP-Based Sentiment Analysis App")  # 📊
 
-# \ud83d\udcc2 File Upload Section
+# 📂 File Upload Section
 st.header("Upload a CSV or TXT file for Sentiment Analysis")
 uploaded_file = st.file_uploader("Upload a CSV or TXT file", type=["csv", "txt"])
 
@@ -58,12 +58,13 @@ if uploaded_file is not None:
     text_column = next((col for col in df.columns if df[col].dtype == "object"), None)
 
     if text_column:
+        # Apply sentiment analysis and expand results into DataFrame
         df[["Processed_Text", "Sentiment_Score", "Sentiment_Label"]] = df[text_column].apply(analyze_sentiment).apply(pd.Series)
 
         st.write("### Sentiment Analysis Results")
         st.dataframe(df[[text_column, "Processed_Text", "Sentiment_Label"]])
 
-        # \ud83d\udcca Sentiment Distribution
+        # 📊 Sentiment Distribution
         st.write("### Sentiment Distribution")
         fig, ax = plt.subplots()
         df["Sentiment_Label"].value_counts().plot(kind="bar", ax=ax, color=["green", "red", "gray"])
@@ -71,8 +72,8 @@ if uploaded_file is not None:
     else:
         st.warning("No valid text column found in the uploaded file!")
 
-# \u270d\ufe0f **Real-time Text Sentiment Analysis**
-st.header("\ud83d\udcdd Real-time Text Sentiment Analysis")
+# ✍️ **Real-time Text Sentiment Analysis**
+st.header("\U0001F4DD Real-time Text Sentiment Analysis")  # 📝
 user_text = st.text_area("Enter text for sentiment analysis:", key="text_input_area")
 
 if user_text:
@@ -81,16 +82,15 @@ if user_text:
     st.write(f"Sentiment Score: {sentiment_score}")
     st.write(f"Sentiment Label: {sentiment_label}")
 
-# \ud83c\udfa4 **Real-time Speech Sentiment Analysis**
-st.header("\ud83c\udfa4 Real-time Speech Sentiment Analysis")
+# 🎤 **Real-time Speech Sentiment Analysis**
+st.header("\U0001F3A4 Real-time Speech Sentiment Analysis")  # 🎤
 
 if st.button("Start Recording"):
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
         st.write("Listening... Speak now!")
-        audio = recognizer.listen(source)
-
         try:
+            audio = recognizer.listen(source, timeout=5)  # Add timeout to prevent hangs
             speech_text = recognizer.recognize_google(audio)
             st.write(f"Recognized Speech: {speech_text}")
 
@@ -103,3 +103,5 @@ if st.button("Start Recording"):
             st.error("Google Speech Recognition could not understand the audio.")
         except sr.RequestError as e:
             st.error(f"Could not request results from Google Speech Recognition service; {e}")
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
